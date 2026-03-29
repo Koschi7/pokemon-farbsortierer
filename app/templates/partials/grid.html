@@ -1,0 +1,21 @@
+{% if pokemon_list %}
+    {% for pokemon in pokemon_list %}
+    <div
+        class="pokemon-card"
+        hx-get="/pokemon/{{ pokemon.id }}"
+        hx-target="#detail-content"
+        hx-swap="innerHTML"
+        onclick="showDetail()"
+    >
+        <img
+            src="{{ pokemon.artwork_url }}"
+            alt="{{ pokemon.german_name }}"
+            loading="lazy"
+            class="pokemon-img"
+        >
+        <span class="pokemon-name">{{ pokemon.german_name }}</span>
+    </div>
+    {% endfor %}
+{% else %}
+    <p class="hint">Keine Pokémon gefunden.</p>
+{% endif %}

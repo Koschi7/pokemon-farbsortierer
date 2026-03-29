@@ -1,0 +1,49 @@
+<div class="detail-card" onclick="event.stopPropagation()">
+    <button class="close-btn" onclick="closeDetail()">&times;</button>
+
+    <img
+        src="{{ pokemon.artwork_url }}"
+        alt="{{ pokemon.german_name }}"
+        class="detail-artwork"
+    >
+
+    <h2 class="detail-name" onclick="speakName('{{ pokemon.german_name }}')">
+        {{ pokemon.german_name }}
+    </h2>
+
+    <div class="detail-types">
+        {% for t in pokemon.types %}
+        <span class="type-badge type-{{ t.type_name }}">
+            {{ type_translations.get(t.type_name, t.type_name) }}
+        </span>
+        {% endfor %}
+    </div>
+
+    <p class="detail-size">{{ pokemon.size_description }}</p>
+
+    {% if evolutions|length > 1 %}
+    <div class="evolution-chain">
+        <h3>Entwicklung</h3>
+        <div class="evolution-list">
+            {% for evo in evolutions %}
+            <div
+                class="evolution-item {% if evo.id == pokemon.id %}current{% endif %}"
+                hx-get="/pokemon/{{ evo.id }}"
+                hx-target="#detail-content"
+                hx-swap="innerHTML"
+            >
+                <img src="{{ evo.sprite_url or evo.artwork_url }}" alt="{{ evo.german_name }}" class="evolution-sprite">
+                <span class="evolution-name">{{ evo.german_name }}</span>
+            </div>
+            {% if not loop.last %}
+            <span class="evolution-arrow">→</span>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    speakName('{{ pokemon.german_name }}');
+</script>

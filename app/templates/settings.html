@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="header">
+    <h1 class="logo">Einstellungen</h1>
+</header>
+
+<main class="settings-page">
+    <form method="post" action="/settings" class="settings-form">
+        <h2>Generationen</h2>
+        <p class="settings-hint">Wähle aus, welche Pokémon-Generationen angezeigt werden sollen.</p>
+
+        <div class="gen-checkboxes">
+            {% for gen in all_generations %}
+            <label class="gen-label">
+                <input
+                    type="checkbox"
+                    name="gen_{{ gen }}"
+                    {% if gen in active_generations %}checked{% endif %}
+                >
+                <span class="gen-box">Generation {{ gen }}</span>
+            </label>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="settings-btn save-btn">Speichern</button>
+    </form>
+
+    <form method="post" action="/settings/seed" class="settings-form">
+        <h2>Daten aktualisieren</h2>
+        <p class="settings-hint">Lade die Pokémon-Daten für die ausgewählten Generationen neu von der PokéAPI.</p>
+        <button type="submit" class="settings-btn seed-btn">Daten neu laden</button>
+    </form>
+
+    <a href="/" class="settings-btn back-btn">Zurück</a>
+</main>
+{% endblock %}

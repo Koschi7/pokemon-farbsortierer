@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="header">
+    <h1 class="logo" id="app-logo">Pokémon Entdecker</h1>
+</header>
+
+<nav class="filter-nav">
+    <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="color" onclick="switchMode('color')">Farbe</button>
+        <button class="mode-btn" data-mode="type" onclick="switchMode('type')">Typ</button>
+    </div>
+
+    <div class="filter-buttons" id="color-filters">
+        {% for key, label in colors.items() %}
+        <button
+            class="filter-btn color-btn color-{{ key }}"
+            hx-get="/pokemon?filter=color&value={{ key }}"
+            hx-target="#pokemon-grid"
+            hx-swap="innerHTML"
+            onclick="setActive(this)"
+        >
+            {{ label }}
+        </button>
+        {% endfor %}
+    </div>
+
+    <div class="filter-buttons hidden" id="type-filters">
+        {% for key, label in types.items() %}
+        <button
+            class="filter-btn type-btn type-{{ key }}"
+            hx-get="/pokemon?filter=type&value={{ key }}"
+            hx-target="#pokemon-grid"
+            hx-swap="innerHTML"
+            onclick="setActive(this)"
+        >
+            {{ label }}
+        </button>
+        {% endfor %}
+    </div>
+</nav>
+
+<main>
+    <div id="pokemon-grid" class="pokemon-grid">
+        <p class="hint">Wähle eine Farbe oder einen Typ!</p>
+    </div>
+</main>
+
+<div id="detail-overlay" class="detail-overlay hidden" onclick="closeDetail(event)">
+    <div id="detail-content" class="detail-content"></div>
+</div>
+{% endblock %}
