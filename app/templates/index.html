@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/type_icons.html" import type_icon %}
 
 {% block content %}
 <header class="header">
@@ -7,11 +8,11 @@
 
 <nav class="filter-nav">
     <div class="mode-toggle">
-        <button class="mode-btn active" data-mode="color" onclick="switchMode('color')">Farbe</button>
-        <button class="mode-btn" data-mode="type" onclick="switchMode('type')">Typ</button>
+        <button class="mode-btn" data-mode="color" onclick="switchMode('color')">Farbe</button>
+        <button class="mode-btn active" data-mode="type" onclick="switchMode('type')">Typ</button>
     </div>
 
-    <div class="filter-buttons" id="color-filters">
+    <div class="filter-buttons hidden" id="color-filters">
         {% for key, label in colors.items() %}
         <button
             class="filter-btn color-btn color-{{ key }}"
@@ -25,7 +26,7 @@
         {% endfor %}
     </div>
 
-    <div class="filter-buttons hidden" id="type-filters">
+    <div class="filter-buttons" id="type-filters">
         {% for key, label in types.items() %}
         <button
             class="filter-btn type-btn type-{{ key }}"
@@ -34,7 +35,8 @@
             hx-swap="innerHTML"
             onclick="setActive(this)"
         >
-            {{ label }}
+            {{ type_icon(key, "20") }}
+            <span>{{ label }}</span>
         </button>
         {% endfor %}
     </div>

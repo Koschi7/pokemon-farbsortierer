@@ -8,3 +8,4 @@ venv/
 .env
 config.env
 .DS_Store
+app/static/audio/

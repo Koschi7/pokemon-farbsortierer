@@ -11,6 +11,7 @@ from sqlalchemy import delete, select
 from app.config import DATABASE_URL, get_default_generations
 from app.models import Base, Pokemon, PokemonType, Setting
 from app.pokeapi import seed_generation
+from app.tts import generate_audio, generate_size_audio, PRONUNCIATION
 
 
 async def main():
@@ -61,8 +62,21 @@ async def main():
             session.add(Setting(key="generations", value=gen_str))
         await session.commit()
 
+    # Generate TTS audio files
+    print("\n--- Sprachausgabe generieren ---")
+    async with async_session() as session:
+        result = await session.execute(select(Pokemon).order_by(Pokemon.id))
+        all_pokemon = result.scalars().all()
+        total = len(all_pokemon)
+        for i, poke in enumerate(all_pokemon):
+            force = poke.german_name in PRONUNCIATION
+            await generate_audio(poke.german_name, poke.id, force=force)
+            await generate_size_audio(poke.size_description_spoken, poke.id)
+            hint = f" (-> {PRONUNCIATION[poke.german_name]})" if force else ""
+            print(f"  [{i+1}/{total}] Audio: {poke.german_name}{hint}")
+
     await engine.dispose()
-    print("\nFertig! Datenbank wurde erfolgreich befüllt.")
+    print("\nFertig! Datenbank und Audiodateien wurden erfolgreich erstellt.")
 
 
 if __name__ == "__main__":

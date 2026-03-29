@@ -24,53 +24,46 @@ function showDetail() {
     document.getElementById('detail-overlay').classList.remove('hidden');
 }
 
+let currentAudio = null;
+
 function closeDetail(event) {
     if (event && event.target !== event.currentTarget) return;
     document.getElementById('detail-overlay').classList.add('hidden');
-    window.speechSynthesis.cancel();
+    stopAudio();
 }
 
 // Close with no-arg version (for X button)
 document.addEventListener('DOMContentLoaded', () => {
-    // Allow close button to work
     const overlay = document.getElementById('detail-overlay');
     if (overlay) {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 overlay.classList.add('hidden');
-                window.speechSynthesis.cancel();
+                stopAudio();
             }
         });
     }
 });
 
-// --- Text-to-Speech (German) ---
-function speakName(name) {
-    if (!('speechSynthesis' in window)) return;
-
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(name);
-    utterance.lang = 'de-DE';
-    utterance.rate = 0.9;
-    utterance.pitch = 1.1;
-
-    // Try to find a German voice
-    const voices = window.speechSynthesis.getVoices();
-    const germanVoice = voices.find(v => v.lang.startsWith('de'));
-    if (germanVoice) {
-        utterance.voice = germanVoice;
-    }
-
-    window.speechSynthesis.speak(utterance);
+// --- Audio playback (pre-generated Edge TTS files) ---
+function speakName(pokemonId) {
+    stopAudio();
+    currentAudio = new Audio(`/static/audio/${pokemonId}.mp3`);
+    currentAudio.play().catch(() => {});
 }
 
-// Preload voices (some browsers need this)
-if ('speechSynthesis' in window) {
-    window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-    };
+function speakSize(pokemonId) {
+    stopAudio();
+    currentAudio = new Audio(`/static/audio/size_${pokemonId}.mp3`);
+    currentAudio.play().catch(() => {});
+}
+
+function stopAudio() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
 }
 
 // --- Long-press on logo to open settings (3 seconds) ---

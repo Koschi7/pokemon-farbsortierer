@@ -84,6 +84,20 @@ body {
     min-height: 48px;
     min-width: 48px;
     transition: transform 0.15s, box-shadow 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-btn .type-icon {
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.type-badge .type-icon {
+    vertical-align: middle;
+    margin-right: 4px;
+    border-radius: 50%;
 }
 
 .filter-btn:active {
@@ -112,34 +126,34 @@ body {
 .color-gray { background: #adb5bd; color: #fff; }
 
 /* Type buttons */
-.type-btn { background: #e9ecef; color: #333; }
-.type-normal { background: #a8a878; color: #fff; }
-.type-fire { background: #f08030; color: #fff; }
-.type-water { background: #6890f0; color: #fff; }
-.type-electric { background: #f8d030; color: #333; }
-.type-grass { background: #78c850; color: #fff; }
-.type-ice { background: #98d8d8; color: #333; }
-.type-fighting { background: #c03028; color: #fff; }
-.type-poison { background: #a040a0; color: #fff; }
-.type-ground { background: #e0c068; color: #333; }
-.type-flying { background: #a890f0; color: #fff; }
-.type-psychic { background: #f85888; color: #fff; }
-.type-bug { background: #a8b820; color: #fff; }
-.type-rock { background: #b8a038; color: #fff; }
-.type-ghost { background: #705898; color: #fff; }
-.type-dragon { background: #7038f8; color: #fff; }
-.type-dark { background: #705848; color: #fff; }
-.type-steel { background: #b8b8d0; color: #333; }
-.type-fairy { background: #ee99ac; color: #fff; }
+.type-btn {
+    background: #fff;
+    color: #333;
+    border: 2px solid #e9ecef;
+}
+
+.type-btn .type-icon {
+    width: 28px;
+    height: 28px;
+}
 
 /* Type badges in detail view */
 .type-badge {
-    display: inline-block;
-    padding: 6px 16px;
-    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
     font-size: 1rem;
     font-weight: 600;
     margin: 4px;
+    background: #f1f3f5;
+    color: #333;
+    border: 2px solid #e9ecef;
+}
+
+.type-badge .type-icon {
+    width: 22px;
+    height: 22px;
 }
 
 /* Pokémon Grid */
@@ -265,6 +279,21 @@ body {
     padding: 12px;
     background: #f8f9fa;
     border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: background 0.15s;
+}
+
+.detail-size:active {
+    background: #e9ecef;
+}
+
+.size-speaker {
+    font-size: 1.4rem;
+    flex-shrink: 0;
 }
 
 /* Evolution Chain */
