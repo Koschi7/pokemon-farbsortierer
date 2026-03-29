@@ -21,6 +21,7 @@ function setActive(btn) {
 
 // --- Detail overlay ---
 function showDetail() {
+    document.getElementById('detail-content').innerHTML = '';
     document.getElementById('detail-overlay').classList.remove('hidden');
 }
 
