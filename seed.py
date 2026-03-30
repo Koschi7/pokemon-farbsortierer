@@ -71,7 +71,7 @@ async def main():
         for i, poke in enumerate(all_pokemon):
             force = poke.german_name in PRONUNCIATION
             await generate_audio(poke.german_name, poke.id, force=force)
-            await generate_size_audio(poke.size_description_spoken, poke.id)
+            await generate_size_audio(poke.size_description_spoken, poke.id, force=True)
             hint = f" (-> {PRONUNCIATION[poke.german_name]})" if force else ""
             print(f"  [{i+1}/{total}] Audio: {poke.german_name}{hint}")
 
