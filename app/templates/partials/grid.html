@@ -9,11 +9,11 @@
     >
         <img
             src="{{ pokemon.artwork_url }}"
-            alt="{{ pokemon.german_name }}"
+            alt="{{ pokemon.display_name }}"
             loading="lazy"
             class="pokemon-img"
         >
-        <span class="pokemon-name">{{ pokemon.german_name }}</span>
+        <span class="pokemon-name">{{ pokemon.display_name }}</span>
     </div>
     {% endfor %}
 {% else %}

@@ -2,7 +2,7 @@ import os
 import edge_tts
 
 AUDIO_DIR = os.path.join(os.path.dirname(__file__), "static", "audio")
-VOICE = "de-DE-ConradNeural"  # Natural-sounding German male voice
+VOICE = "de-DE-ConradNeural"
 
 # Phonetic overrides so the German TTS doesn't fall into English pronunciation.
 # Keys = official German name, values = how the TTS should say it.
@@ -10,6 +10,8 @@ PRONUNCIATION = {
     # Gen 1
     "Krabby": "Krabbi",
     "Kingler": "Kinglär",
+    "Nidoran♀": "Nidoran Weiblich",
+    "Nidoran♂": "Nidoran Männlich",
     "Nidoqueen": "Nidokwien",
     "Starmie": "Starmii",
     "Porygon": "Porigon",
@@ -17,6 +19,7 @@ PRONUNCIATION = {
     "Chaneira": "Schaneira",
     "Kicklee": "Kickleh",
     "Nockchan": "Nocktschan",
+    "Mewtu": "Mjutu",
     # Gen 2
     "Hoothoot": "Hutu",
     "Ledyba": "Lediba",

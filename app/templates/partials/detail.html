@@ -4,12 +4,12 @@
 
     <img
         src="{{ pokemon.artwork_url }}"
-        alt="{{ pokemon.german_name }}"
+        alt="{{ pokemon.display_name }}"
         class="detail-artwork"
     >
 
     <h2 class="detail-name" onclick="speakName({{ pokemon.id }})">
-        {{ pokemon.german_name }}
+        {{ pokemon.display_name }}
     </h2>
 
     <div class="detail-types">
@@ -37,8 +37,8 @@
                 hx-target="#detail-content"
                 hx-swap="innerHTML"
             >
-                <img src="{{ evo.sprite_url or evo.artwork_url }}" alt="{{ evo.german_name }}" class="evolution-sprite">
-                <span class="evolution-name">{{ evo.german_name }}</span>
+                <img src="{{ evo.sprite_url or evo.artwork_url }}" alt="{{ evo.display_name }}" class="evolution-sprite">
+                <span class="evolution-name">{{ evo.display_name }}</span>
             </div>
             {% if not loop.last %}
             <span class="evolution-arrow">→</span>

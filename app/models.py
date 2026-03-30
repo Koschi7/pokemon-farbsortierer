@@ -30,6 +30,10 @@ class Pokemon(Base):
     evolves_from_id = Column(Integer, ForeignKey("pokemon.id"), nullable=True)
 
     @property
+    def display_name(self) -> str:
+        return self.german_name.replace("♀", " Weiblich").replace("♂", " Männlich")
+
+    @property
     def type_names(self) -> list[str]:
         return [t.type_name for t in self.types]
 
@@ -54,9 +58,9 @@ class Pokemon(Base):
         elif h <= 0.9:
             return f"{height_str} – So groß wie ein Bobbycar!"
         elif h <= 1.1:
-            return f"{height_str} – So groß wie ein Fahrrad!"
-        elif h <= 1.3:
             return f"{height_str} – So groß wie du!"
+        elif h <= 1.3:
+            return f"{height_str} – So groß wie ein Fahrrad!"
         elif h <= 1.6:
             return f"{height_str} – So groß wie ein Schneemann!"
         elif h <= 2.0:
@@ -72,39 +76,41 @@ class Pokemon(Base):
     def size_description_spoken(self) -> str:
         """German-phonetic version for TTS: '1 Meter siebzig' instead of '1,7 m'."""
         h = self.height
-        m = int(h)
-        cm = round((h - m) * 100)
-        if m == 0:
-            spoken_height = f"null Meter {cm}"
-        elif cm == 0:
-            spoken_height = f"{m} Meter"
+        if h < 1.0:
+            cm = round(h * 100)
+            spoken_height = f"{cm} Tsentimeter"
         else:
-            spoken_height = f"{m} Meter {cm}"
+            m = int(h)
+            cm = round((h - m) * 100)
+            if cm == 0:
+                spoken_height = f"{m} Meter"
+            else:
+                spoken_height = f"{m} Meter {cm}"
 
         if h <= 0.2:
-            return f"{spoken_height}. Passt in deine Hand!"
+            return f"{spoken_height}, Passt in deine Hand!"
         elif h <= 0.3:
-            return f"{spoken_height}. So groß wie ein Lineal!"
+            return f"{spoken_height}, So groß wie ein Lineal!"
         elif h <= 0.5:
-            return f"{spoken_height}. So groß wie ein Teddy!"
+            return f"{spoken_height}, So groß wie ein Teddy!"
         elif h <= 0.7:
-            return f"{spoken_height}. So groß wie ein Kissen!"
+            return f"{spoken_height}, So groß wie ein Kissen!"
         elif h <= 0.9:
-            return f"{spoken_height}. So groß wie ein Bobbycar!"
+            return f"{spoken_height}, So groß wie ein Bobbycar!"
         elif h <= 1.1:
-            return f"{spoken_height}. So groß wie ein Fahrrad!"
+            return f"{spoken_height}, So groß wie du!"
         elif h <= 1.3:
-            return f"{spoken_height}. So groß wie du!"
+            return f"{spoken_height}, So groß wie ein Fahrrad!"
         elif h <= 1.6:
-            return f"{spoken_height}. So groß wie ein Schneemann!"
+            return f"{spoken_height}, So groß wie ein Schneemann!"
         elif h <= 2.0:
-            return f"{spoken_height}. So groß wie Mama oder Papa!"
+            return f"{spoken_height}, So groß wie Mama oder Pappa!"
         elif h <= 3.0:
-            return f"{spoken_height}. So groß wie eine Zimmerdecke!"
+            return f"{spoken_height}, So groß wie eine Zimmerdecke!"
         elif h <= 5.0:
-            return f"{spoken_height}. So groß wie eine Giraffe!"
+            return f"{spoken_height}, So groß wie eine Giraffe!"
         else:
-            return f"{spoken_height}. So groß wie ein Haus!"
+            return f"{spoken_height}, So groß wie ein Haus!"
 
 
 class PokemonType(Base):
