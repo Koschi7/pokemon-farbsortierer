@@ -13,6 +13,7 @@ from app.database import init_db, get_session
 from app.models import Pokemon, PokemonType, Setting
 from app.config import get_default_generations
 from app.pokeapi import COLOR_TRANSLATIONS, TYPE_TRANSLATIONS, seed_generation
+from app.tts import generate_audio, generate_size_audio, PRONUNCIATION
 
 
 @asynccontextmanager
@@ -165,6 +166,16 @@ async def save_settings(
     return RedirectResponse(url="/settings", status_code=303)
 
 
+async def _generate_audio_for_pokemon(session: AsyncSession):
+    """Generate name + size audio for all Pokémon in the database."""
+    result = await session.execute(select(Pokemon).order_by(Pokemon.id))
+    all_pokemon = result.scalars().all()
+    for poke in all_pokemon:
+        force = poke.german_name in PRONUNCIATION
+        await generate_audio(poke.german_name, poke.id, force=force)
+        await generate_size_audio(poke.size_description_spoken, poke.id, force=True)
+
+
 @app.post("/settings/seed", response_class=HTMLResponse)
 async def reseed_data(
     request: Request,
@@ -187,5 +198,8 @@ async def reseed_data(
         await session.commit()
 
         await seed_generation(session, gen)
+
+    # Generate audio in the background
+    asyncio.create_task(_generate_audio_for_pokemon(session))
 
     return RedirectResponse(url="/settings", status_code=303)

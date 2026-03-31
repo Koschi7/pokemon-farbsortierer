@@ -65,6 +65,7 @@ Die App ist dann unter `http://localhost:8000` erreichbar.
 **Für Eltern:**
 - 3 Sekunden lang auf „Pokémon Entdecker" drücken → Einstellungen
 - Generationen an-/abwählen und Daten neu laden
+- Sprachausgabe wird automatisch im Hintergrund generiert beim Neu-Laden der Daten
 
 ### Deployment (VPS)
 
@@ -158,6 +159,7 @@ App will be available at `http://localhost:8000`.
 **For parents:**
 - Long-press (3s) on "Pokémon Entdecker" title → settings page
 - Toggle generations and re-seed data
+- Audio files are automatically generated in the background when re-seeding
 
 ### Deployment (VPS)
 
