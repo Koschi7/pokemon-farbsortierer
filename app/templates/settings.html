@@ -26,7 +26,14 @@
         <button type="submit" class="settings-btn save-btn">Speichern</button>
     </form>
 
-    <form method="post" action="/settings/seed" class="settings-form">
+    <div id="seed-status"
+         hx-get="/settings/seed-status"
+         hx-trigger="load"
+         hx-swap="outerHTML">
+    </div>
+
+    <form method="post" action="/settings/seed" class="settings-form"
+          hx-post="/settings/seed" hx-target="#seed-status" hx-swap="outerHTML">
         <h2>Daten aktualisieren</h2>
         <p class="settings-hint">Lade die Pokémon-Daten für die ausgewählten Generationen neu von der PokéAPI.</p>
         <button type="submit" class="settings-btn seed-btn">Daten neu laden</button>

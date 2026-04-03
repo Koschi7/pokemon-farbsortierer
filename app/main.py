@@ -15,6 +15,9 @@ from app.config import get_default_generations
 from app.pokeapi import COLOR_TRANSLATIONS, TYPE_TRANSLATIONS, seed_generation
 from app.tts import generate_audio, generate_size_audio, PRONUNCIATION
 
+# In-memory seed status tracking
+_seed_status: dict = {"running": False, "done": False}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -91,14 +94,19 @@ async def pokemon_detail(
     if not pokemon:
         return HTMLResponse("<p>Pokémon nicht gefunden</p>", status_code=404)
 
-    # Get evolution chain
+    generations = await get_active_generations(session)
+
+    # Get evolution chain (only from active generations)
     evolutions = []
 
     # Find the base of the chain by walking up evolves_from
     base = pokemon
     while base.evolves_from_id:
         result = await session.execute(
-            select(Pokemon).options(selectinload(Pokemon.types)).where(Pokemon.id == base.evolves_from_id)
+            select(Pokemon).options(selectinload(Pokemon.types)).where(
+                Pokemon.id == base.evolves_from_id,
+                Pokemon.generation.in_(generations),
+            )
         )
         parent = result.scalar_one_or_none()
         if parent:
@@ -112,7 +120,10 @@ async def pokemon_detail(
         result = await session.execute(
             select(Pokemon)
             .options(selectinload(Pokemon.types))
-            .where(Pokemon.evolves_from_id == poke.id)
+            .where(
+                Pokemon.evolves_from_id == poke.id,
+                Pokemon.generation.in_(generations),
+            )
             .order_by(Pokemon.id)
         )
         children = result.scalars().all()
@@ -166,14 +177,38 @@ async def save_settings(
     return RedirectResponse(url="/settings", status_code=303)
 
 
-async def _generate_audio_for_pokemon(session: AsyncSession):
-    """Generate name + size audio for all Pokémon in the database."""
-    result = await session.execute(select(Pokemon).order_by(Pokemon.id))
-    all_pokemon = result.scalars().all()
-    for poke in all_pokemon:
-        force = poke.german_name in PRONUNCIATION
-        await generate_audio(poke.german_name, poke.id, force=force)
-        await generate_size_audio(poke.size_description_spoken, poke.id, force=True)
+async def _reseed_in_background(generations: list[int]):
+    """Re-seed data and generate audio in the background with its own session."""
+    from app.database import async_session
+
+    _seed_status["running"] = True
+    _seed_status["done"] = False
+    try:
+        async with async_session() as session:
+            for gen in generations:
+                pokemon_ids = (await session.execute(
+                    select(Pokemon.id).where(Pokemon.generation == gen)
+                )).scalars().all()
+
+                if pokemon_ids:
+                    await session.execute(
+                        delete(PokemonType).where(PokemonType.pokemon_id.in_(pokemon_ids))
+                    )
+                    await session.execute(delete(Pokemon).where(Pokemon.generation == gen))
+                await session.commit()
+
+                await seed_generation(session, gen)
+
+            # Generate audio
+            result = await session.execute(select(Pokemon).order_by(Pokemon.id))
+            all_pokemon = result.scalars().all()
+            for poke in all_pokemon:
+                force = poke.german_name in PRONUNCIATION
+                await generate_audio(poke.german_name, poke.id, force=force)
+                await generate_size_audio(poke.size_description_spoken, poke.id, force=True)
+    finally:
+        _seed_status["running"] = False
+        _seed_status["done"] = True
 
 
 @app.post("/settings/seed", response_class=HTMLResponse)
@@ -183,23 +218,31 @@ async def reseed_data(
 ):
     generations = await get_active_generations(session)
 
-    # Clear and re-seed each generation
-    for gen in generations:
-        # Delete types first (foreign key), then pokemon
-        pokemon_ids = (await session.execute(
-            select(Pokemon.id).where(Pokemon.generation == gen)
-        )).scalars().all()
+    # Run seeding + audio generation in background so the request returns immediately
+    asyncio.create_task(_reseed_in_background(generations))
 
-        if pokemon_ids:
-            await session.execute(
-                delete(PokemonType).where(PokemonType.pokemon_id.in_(pokemon_ids))
-            )
-            await session.execute(delete(Pokemon).where(Pokemon.generation == gen))
-        await session.commit()
-
-        await seed_generation(session, gen)
-
-    # Generate audio in the background
-    asyncio.create_task(_generate_audio_for_pokemon(session))
-
+    # If called via HTMX, return the polling banner directly
+    if request.headers.get("HX-Request"):
+        return HTMLResponse(
+            '<div id="seed-status" class="seed-banner running" '
+            'hx-get="/settings/seed-status" hx-trigger="every 2s" hx-swap="outerHTML">'
+            '⏳ Daten werden geladen…</div>'
+        )
     return RedirectResponse(url="/settings", status_code=303)
+
+
+@app.get("/settings/seed-status", response_class=HTMLResponse)
+async def seed_status(request: Request):
+    if _seed_status["running"]:
+        return HTMLResponse(
+            '<div id="seed-status" class="seed-banner running" '
+            'hx-get="/settings/seed-status" hx-trigger="every 2s" hx-swap="outerHTML">'
+            '⏳ Daten werden geladen…</div>'
+        )
+    if _seed_status["done"]:
+        _seed_status["done"] = False
+        return HTMLResponse(
+            '<div id="seed-status" class="seed-banner done">'
+            '✅ Fertig! Alle Daten und Audiodateien wurden generiert.</div>'
+        )
+    return HTMLResponse('<div id="seed-status"></div>')

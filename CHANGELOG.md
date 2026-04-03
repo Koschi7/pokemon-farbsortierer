@@ -6,6 +6,13 @@
 
 ## Deutsch
 
+### 2026-04-03
+
+**Bugfixes & Verbesserungen**
+- Daten neu laden läuft jetzt im Hintergrund — kein Timeout mehr auf der Einstellungsseite
+- Statusanzeige auf der Einstellungsseite: zeigt Fortschritt und Abschluss beim Neu-Laden
+- Entwicklungsketten zeigen nur noch Pokémon aus aktiven Generationen
+
 ### 2026-03-29
 
 **Automatische Sprachausgabe beim Neu-Laden**
@@ -55,6 +62,13 @@
 ---
 
 ## English
+
+### 2026-04-03
+
+**Bugfixes & improvements**
+- Re-seeding now runs in the background — no more timeout on the settings page
+- Status banner on settings page shows progress and completion when re-seeding
+- Evolution chains only show Pokémon from active generations
 
 ### 2026-03-29
 
