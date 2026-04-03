@@ -16,7 +16,14 @@ from app.pokeapi import COLOR_TRANSLATIONS, TYPE_TRANSLATIONS, seed_generation
 from app.tts import generate_audio, generate_size_audio, PRONUNCIATION
 
 # In-memory seed status tracking
-_seed_status: dict = {"running": False, "done": False}
+_seed_status: dict = {
+    "running": False,
+    "done": False,
+    "phase": "",       # "seed" or "audio"
+    "current": 0,
+    "total": 0,
+    "detail": "",      # e.g. Pokemon name or generation
+}
 
 
 @asynccontextmanager
@@ -181,11 +188,11 @@ async def _reseed_in_background(generations: list[int]):
     """Re-seed data and generate audio in the background with its own session."""
     from app.database import async_session
 
-    _seed_status["running"] = True
-    _seed_status["done"] = False
     try:
         async with async_session() as session:
             for gen in generations:
+                _seed_status.update(phase="seed", detail=f"Generation {gen}")
+
                 pokemon_ids = (await session.execute(
                     select(Pokemon.id).where(Pokemon.generation == gen)
                 )).scalars().all()
@@ -197,18 +204,24 @@ async def _reseed_in_background(generations: list[int]):
                     await session.execute(delete(Pokemon).where(Pokemon.generation == gen))
                 await session.commit()
 
-                await seed_generation(session, gen)
+                def on_progress(current, total, name):
+                    _seed_status.update(current=current, total=total, detail=name)
+
+                await seed_generation(session, gen, progress_callback=on_progress)
 
             # Generate audio
+            _seed_status.update(phase="audio", current=0, total=0, detail="")
             result = await session.execute(select(Pokemon).order_by(Pokemon.id))
             all_pokemon = result.scalars().all()
-            for poke in all_pokemon:
+            total = len(all_pokemon)
+            _seed_status["total"] = total
+            for i, poke in enumerate(all_pokemon):
+                _seed_status.update(current=i + 1, detail=poke.german_name)
                 force = poke.german_name in PRONUNCIATION
                 await generate_audio(poke.german_name, poke.id, force=force)
                 await generate_size_audio(poke.size_description_spoken, poke.id, force=True)
     finally:
-        _seed_status["running"] = False
-        _seed_status["done"] = True
+        _seed_status.update(running=False, done=True)
 
 
 @app.post("/settings/seed", response_class=HTMLResponse)
@@ -218,31 +231,51 @@ async def reseed_data(
 ):
     generations = await get_active_generations(session)
 
-    # Run seeding + audio generation in background so the request returns immediately
+    # Set status before creating the task so the response sees it immediately
+    _seed_status.update(running=True, done=False, phase="start", current=0, total=0, detail="")
     asyncio.create_task(_reseed_in_background(generations))
 
     # If called via HTMX, return the polling banner directly
     if request.headers.get("HX-Request"):
-        return HTMLResponse(
-            '<div id="seed-status" class="seed-banner running" '
-            'hx-get="/settings/seed-status" hx-trigger="every 2s" hx-swap="outerHTML">'
-            '⏳ Daten werden geladen…</div>'
-        )
+        return HTMLResponse(_render_seed_status())
     return RedirectResponse(url="/settings", status_code=303)
+
+
+def _render_seed_status() -> str:
+    if _seed_status["running"]:
+        phase = _seed_status["phase"]
+        current = _seed_status["current"]
+        total = _seed_status["total"]
+        detail = _seed_status["detail"]
+
+        if phase == "start":
+            pct = 0
+            label = "Starte…"
+        elif phase == "seed":
+            pct = round(current / total * 100) if total > 0 else 0
+            label = f"Pokémon laden: {current}/{total} — {detail}"
+        else:
+            pct = round(current / total * 100) if total > 0 else 0
+            label = f"Audio generieren: {current}/{total} — {detail}"
+
+        return (
+            '<div id="seed-status" class="seed-banner running" '
+            'hx-get="/settings/seed-status" hx-trigger="every 1s" hx-swap="outerHTML">'
+            f'<div class="seed-label">{label}</div>'
+            f'<div class="seed-progress-bar"><div class="seed-progress-fill" style="width:{pct}%"></div></div>'
+            '</div>'
+        )
+
+    if _seed_status["done"]:
+        _seed_status["done"] = False
+        return (
+            '<div id="seed-status" class="seed-banner done">'
+            '✅ Fertig! Alle Daten und Audiodateien wurden generiert.</div>'
+        )
+
+    return '<div id="seed-status"></div>'
 
 
 @app.get("/settings/seed-status", response_class=HTMLResponse)
 async def seed_status(request: Request):
-    if _seed_status["running"]:
-        return HTMLResponse(
-            '<div id="seed-status" class="seed-banner running" '
-            'hx-get="/settings/seed-status" hx-trigger="every 2s" hx-swap="outerHTML">'
-            '⏳ Daten werden geladen…</div>'
-        )
-    if _seed_status["done"]:
-        _seed_status["done"] = False
-        return HTMLResponse(
-            '<div id="seed-status" class="seed-banner done">'
-            '✅ Fertig! Alle Daten und Audiodateien wurden generiert.</div>'
-        )
-    return HTMLResponse('<div id="seed-status"></div>')
+    return HTMLResponse(_render_seed_status())

@@ -10,7 +10,7 @@
 
 **Bugfixes & Verbesserungen**
 - Daten neu laden läuft jetzt im Hintergrund — kein Timeout mehr auf der Einstellungsseite
-- Statusanzeige auf der Einstellungsseite: zeigt Fortschritt und Abschluss beim Neu-Laden
+- Fortschrittsbalken auf der Einstellungsseite: zeigt Phase (Pokémon laden / Audio generieren), aktuellen Stand und Abschluss
 - Entwicklungsketten zeigen nur noch Pokémon aus aktiven Generationen
 
 ### 2026-03-29
@@ -67,7 +67,7 @@
 
 **Bugfixes & improvements**
 - Re-seeding now runs in the background — no more timeout on the settings page
-- Status banner on settings page shows progress and completion when re-seeding
+- Progress bar on settings page showing phase (loading Pokémon / generating audio), current progress, and completion
 - Evolution chains only show Pokémon from active generations
 
 ### 2026-03-29
