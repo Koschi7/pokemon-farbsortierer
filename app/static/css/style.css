@@ -489,16 +489,40 @@ body {
     margin-top: 8px;
 }
 
-/* Tablet (iPad) */
+/* Tablet (Fire Tablet 8, iPad) */
 @media (min-width: 768px) {
+    .header {
+        padding: 8px 16px;
+    }
+
+    .logo {
+        font-size: 1.4rem;
+    }
+
+    .filter-scroll {
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 6px 12px;
+        gap: 6px;
+    }
+
     .pokemon-grid {
         grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        padding: 24px;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .pokemon-card {
+        padding: 8px;
     }
 
     .pokemon-img {
-        max-width: 150px;
+        max-width: 100px;
+    }
+
+    .pokemon-name {
+        font-size: 0.9rem;
+        margin-top: 4px;
     }
 
     .detail-card {
@@ -509,15 +533,6 @@ body {
     .detail-artwork {
         width: 220px;
         height: 220px;
-    }
-
-    .logo {
-        font-size: 1.6rem;
-    }
-
-    .filter-scroll {
-        justify-content: center;
-        flex-wrap: wrap;
     }
 }
 
