@@ -12,5 +12,10 @@
 <body>
     {% block content %}{% endblock %}
     <script src="/static/js/app.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+    }
+    </script>
 </body>
 </html>
