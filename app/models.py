@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Index, Table
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -11,11 +11,16 @@ pokemon_types = Table(
     Base.metadata,
     Column("pokemon_id", Integer, ForeignKey("pokemon.id"), primary_key=True),
     Column("type_name", String, primary_key=True),
+    Index("idx_pokemon_types_type_name", "type_name"),
 )
 
 
 class Pokemon(Base):
     __tablename__ = "pokemon"
+    __table_args__ = (
+        Index("idx_pokemon_generation", "generation"),
+        Index("idx_pokemon_color", "color"),
+    )
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
