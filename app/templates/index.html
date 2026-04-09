@@ -9,6 +9,11 @@
             <button class="mode-btn" data-mode="color" onclick="switchMode('color')">Farbe</button>
             <button class="mode-btn active" data-mode="type" onclick="switchMode('type')">Typ</button>
             <button class="mode-btn" data-mode="search" onclick="switchMode('search')">Suche</button>
+            <button class="mode-btn" data-mode="favorites"
+                    hx-get="/pokemon?filter=favorites"
+                    hx-target="#pokemon-grid"
+                    hx-swap="innerHTML"
+                    onclick="switchMode('favorites')">❤️</button>
         </div>
     </header>
 

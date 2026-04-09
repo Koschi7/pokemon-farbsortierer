@@ -333,6 +333,22 @@ body {
     flex-shrink: 0;
 }
 
+/* Favorite button */
+.fav-btn {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 4px 12px;
+    transition: transform 0.15s;
+    min-width: 48px;
+    min-height: 48px;
+}
+
+.fav-btn:active {
+    transform: scale(1.3);
+}
+
 /* Evolution Chain */
 .evolution-chain {
     margin-top: 16px;

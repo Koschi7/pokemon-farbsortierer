@@ -12,6 +12,12 @@
         {{ pokemon.display_name }}
     </h2>
 
+    <button class="fav-btn {{ 'fav-active' if is_favorite else '' }}"
+            hx-post="/pokemon/{{ pokemon.id }}/favorite"
+            hx-swap="outerHTML">
+        {{ "❤️" if is_favorite else "🤍" }}
+    </button>
+
     <div class="detail-types">
         {% for t in pokemon.types %}
         <span class="type-badge type-{{ t.type_name }}">

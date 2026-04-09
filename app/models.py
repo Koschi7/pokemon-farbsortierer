@@ -127,6 +127,12 @@ class PokemonType(Base):
     pokemon = relationship("Pokemon", back_populates="types")
 
 
+class Favorite(Base):
+    __tablename__ = "favorites"
+
+    pokemon_id = Column(Integer, ForeignKey("pokemon.id"), primary_key=True)
+
+
 class Setting(Base):
     __tablename__ = "settings"
 

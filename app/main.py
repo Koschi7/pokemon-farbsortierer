@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import init_db, get_session, async_session
-from app.models import Pokemon, PokemonType, Setting
+from app.models import Pokemon, PokemonType, Favorite, Setting
 from app.config import get_default_generations
 from app.pokeapi import COLOR_TRANSLATIONS, TYPE_TRANSLATIONS, seed_generation
 from app.tts import generate_audio, generate_size_audio, PRONUNCIATION
@@ -79,7 +79,12 @@ async def pokemon_grid(
         .where(Pokemon.generation.in_(generations))
     )
 
-    if filter == "search":
+    if filter == "favorites":
+        fav_ids = (await session.execute(select(Favorite.pokemon_id))).scalars().all()
+        if not fav_ids:
+            return HTMLResponse('<p class="hint">Noch keine Favoriten!</p>')
+        query = query.where(Pokemon.id.in_(fav_ids))
+    elif filter == "search":
         if not q.strip():
             return HTMLResponse('<p class="hint">Tippe einen Namen ein!</p>')
         search_term = f"%{q.strip()}%"
@@ -155,12 +160,41 @@ async def pokemon_detail(
 
     await get_chain(base)
 
+    # Check if favorited
+    fav = await session.execute(select(Favorite).where(Favorite.pokemon_id == pokemon_id))
+    is_favorite = fav.scalar_one_or_none() is not None
+
     return templates.TemplateResponse("partials/detail.html", {
         "request": request,
         "pokemon": pokemon,
         "evolutions": evolutions,
         "type_translations": TYPE_TRANSLATIONS,
+        "is_favorite": is_favorite,
     })
+
+
+@app.post("/pokemon/{pokemon_id}/favorite", response_class=HTMLResponse)
+async def toggle_favorite(
+    request: Request,
+    pokemon_id: int,
+    session: AsyncSession = Depends(get_session),
+):
+    fav = await session.execute(select(Favorite).where(Favorite.pokemon_id == pokemon_id))
+    existing = fav.scalar_one_or_none()
+    if existing:
+        await session.delete(existing)
+        is_favorite = False
+    else:
+        session.add(Favorite(pokemon_id=pokemon_id))
+        is_favorite = True
+    await session.commit()
+
+    heart = "❤️" if is_favorite else "🤍"
+    return HTMLResponse(
+        f'<button class="fav-btn {"fav-active" if is_favorite else ""}" '
+        f'hx-post="/pokemon/{pokemon_id}/favorite" hx-swap="outerHTML">'
+        f'{heart}</button>'
+    )
 
 
 @app.get("/settings", response_class=HTMLResponse)

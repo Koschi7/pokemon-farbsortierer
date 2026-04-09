@@ -14,6 +14,9 @@ function switchMode(mode) {
     if (mode === 'search') {
         document.getElementById('pokemon-grid').innerHTML = '<p class="hint">Tippe einen Namen ein!</p>';
         setTimeout(() => document.getElementById('search-input').focus(), 100);
+    } else if (mode === 'favorites') {
+        // Grid is loaded via hx-get on the button
+        document.getElementById('search-input').value = '';
     } else {
         document.getElementById('search-input').value = '';
         document.getElementById('pokemon-grid').innerHTML = '<p class="hint">Wähle eine Farbe oder einen Typ!</p>';
