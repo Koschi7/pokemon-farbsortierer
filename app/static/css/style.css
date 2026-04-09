@@ -500,6 +500,30 @@ body {
     font-weight: 500;
 }
 
+.lang-toggle {
+    display: flex;
+    gap: 12px;
+    margin: 12px 0 16px;
+}
+
+.lang-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.lang-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    accent-color: #4dabf7;
+}
+
+.lang-box {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
 .settings-btn {
     display: block;
     width: 100%;

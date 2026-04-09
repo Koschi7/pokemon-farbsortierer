@@ -4,11 +4,11 @@
 {% block content %}
 <div class="sticky-top">
     <header class="header">
-        <h1 class="logo" id="app-logo">Pokémon Entdecker</h1>
+        <h1 class="logo" id="app-logo">{{ t.app_title }}</h1>
         <div class="mode-toggle">
-            <button class="mode-btn" data-mode="color" onclick="switchMode('color')">Farbe</button>
-            <button class="mode-btn active" data-mode="type" onclick="switchMode('type')">Typ</button>
-            <button class="mode-btn" data-mode="search" onclick="switchMode('search')">Suche</button>
+            <button class="mode-btn" data-mode="color" onclick="switchMode('color')">{{ t.mode_color }}</button>
+            <button class="mode-btn active" data-mode="type" onclick="switchMode('type')">{{ t.mode_type }}</button>
+            <button class="mode-btn" data-mode="search" onclick="switchMode('search')">{{ t.mode_search }}</button>
             <button class="mode-btn" data-mode="favorites"
                     hx-get="/pokemon?filter=favorites"
                     hx-target="#pokemon-grid"
@@ -51,7 +51,7 @@
             type="text"
             id="search-input"
             class="search-input"
-            placeholder="Pokemon suchen…"
+            placeholder="{{ t.mode_search }}…"
             autocomplete="off"
             hx-get="/pokemon?filter=search"
             hx-target="#pokemon-grid"
@@ -66,11 +66,19 @@
 
 <main>
     <div id="pokemon-grid" class="pokemon-grid">
-        <p class="hint">Wähle eine Farbe oder einen Typ!</p>
+        <p class="hint">{{ t.hint_default }}</p>
     </div>
 </main>
 
 <div id="detail-overlay" class="detail-overlay hidden" onclick="closeDetail(event)">
     <div id="detail-content" class="detail-content"></div>
 </div>
+
+<script>
+    window.APP_LANG = "{{ lang }}";
+    window.APP_HINTS = {
+        default: "{{ t.hint_default }}",
+        search: "{{ t.hint_search }}"
+    };
+</script>
 {% endblock %}

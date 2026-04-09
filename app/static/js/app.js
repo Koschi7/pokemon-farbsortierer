@@ -11,15 +11,16 @@ function switchMode(mode) {
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
 
     // Reset grid and focus search input
+    const hints = window.APP_HINTS || { default: "Wähle eine Farbe oder einen Typ!", search: "Tippe einen Namen ein!" };
     if (mode === 'search') {
-        document.getElementById('pokemon-grid').innerHTML = '<p class="hint">Tippe einen Namen ein!</p>';
+        document.getElementById('pokemon-grid').innerHTML = `<p class="hint">${hints.search}</p>`;
         setTimeout(() => document.getElementById('search-input').focus(), 100);
     } else if (mode === 'favorites') {
         // Grid is loaded via hx-get on the button
         document.getElementById('search-input').value = '';
     } else {
         document.getElementById('search-input').value = '';
-        document.getElementById('pokemon-grid').innerHTML = '<p class="hint">Wähle eine Farbe oder einen Typ!</p>';
+        document.getElementById('pokemon-grid').innerHTML = `<p class="hint">${hints.default}</p>`;
     }
 }
 
@@ -59,13 +60,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Audio playback (pre-generated Edge TTS files) ---
 function speakName(pokemonId) {
     stopAudio();
-    currentAudio = new Audio(`/static/audio/${pokemonId}.mp3`);
+    const lang = window.APP_LANG || 'de';
+    currentAudio = new Audio(`/static/audio/${lang}/${pokemonId}.mp3`);
     currentAudio.play().catch(() => {});
 }
 
 function speakSize(pokemonId) {
     stopAudio();
-    currentAudio = new Audio(`/static/audio/size_${pokemonId}.mp3`);
+    const lang = window.APP_LANG || 'de';
+    currentAudio = new Audio(`/static/audio/${lang}/size_${pokemonId}.mp3`);
     currentAudio.play().catch(() => {});
 }
 

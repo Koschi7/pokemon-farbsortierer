@@ -16,8 +16,9 @@ from sqlalchemy.orm import selectinload
 from app.database import init_db, get_session, async_session
 from app.models import Pokemon, PokemonType, Favorite, Setting
 from app.config import get_default_generations
-from app.pokeapi import COLOR_TRANSLATIONS, TYPE_TRANSLATIONS, seed_generation
+from app.pokeapi import seed_generation
 from app.tts import generate_audio, generate_size_audio, PRONUNCIATION
+from app.i18n import get_t, get_size_description, get_size_description_spoken
 
 # In-memory seed status tracking
 _seed_status: dict = {
@@ -55,12 +56,22 @@ async def get_active_generations(session: AsyncSession) -> list[int]:
     return get_default_generations()
 
 
+async def get_language(session: AsyncSession) -> str:
+    result = await session.execute(select(Setting).where(Setting.key == "language"))
+    setting = result.scalar_one_or_none()
+    return setting.value if setting else "de"
+
+
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+async def index(request: Request, session: AsyncSession = Depends(get_session)):
+    lang = await get_language(session)
+    t = get_t(lang)
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "colors": COLOR_TRANSLATIONS,
-        "types": TYPE_TRANSLATIONS,
+        "colors": t["colors"],
+        "types": t["types"],
+        "t": t,
+        "lang": lang,
     })
 
 
@@ -79,16 +90,20 @@ async def pokemon_grid(
         .where(Pokemon.generation.in_(generations))
     )
 
+    lang = await get_language(session)
+    t = get_t(lang)
+
     if filter == "favorites":
         fav_ids = (await session.execute(select(Favorite.pokemon_id))).scalars().all()
         if not fav_ids:
-            return HTMLResponse('<p class="hint">Noch keine Favoriten!</p>')
+            return HTMLResponse(f'<p class="hint">{t["hint_no_favorites"]}</p>')
         query = query.where(Pokemon.id.in_(fav_ids))
     elif filter == "search":
         if not q.strip():
-            return HTMLResponse('<p class="hint">Tippe einen Namen ein!</p>')
+            return HTMLResponse(f'<p class="hint">{t["hint_search"]}</p>')
         search_term = f"%{q.strip()}%"
-        query = query.where(Pokemon.german_name.ilike(search_term))
+        name_col = Pokemon.german_name if lang == "de" else Pokemon.name
+        query = query.where(name_col.ilike(search_term))
     elif filter == "color" and value:
         query = query.where(Pokemon.color == value)
     elif filter == "type" and value:
@@ -105,7 +120,8 @@ async def pokemon_grid(
     return templates.TemplateResponse("partials/grid.html", {
         "request": request,
         "pokemon_list": pokemon_list,
-        "type_translations": TYPE_TRANSLATIONS,
+        "type_translations": t["types"],
+        "lang": lang,
     })
 
 
@@ -119,8 +135,10 @@ async def pokemon_detail(
         select(Pokemon).options(selectinload(Pokemon.types)).where(Pokemon.id == pokemon_id)
     )
     pokemon = result.scalar_one_or_none()
+    lang = await get_language(session)
+    t = get_t(lang)
     if not pokemon:
-        return HTMLResponse("<p>Pokémon nicht gefunden</p>", status_code=404)
+        return HTMLResponse(f'<p>{t["not_found"]}</p>', status_code=404)
 
     generations = await get_active_generations(session)
 
@@ -168,8 +186,11 @@ async def pokemon_detail(
         "request": request,
         "pokemon": pokemon,
         "evolutions": evolutions,
-        "type_translations": TYPE_TRANSLATIONS,
+        "type_translations": t["types"],
         "is_favorite": is_favorite,
+        "lang": lang,
+        "t": t,
+        "size_desc": get_size_description(pokemon.height, lang),
     })
 
 
@@ -203,10 +224,14 @@ async def settings_page(
     session: AsyncSession = Depends(get_session),
 ):
     active_gens = await get_active_generations(session)
+    lang = await get_language(session)
+    t = get_t(lang)
     return templates.TemplateResponse("settings.html", {
         "request": request,
         "active_generations": active_gens,
         "all_generations": list(range(1, 10)),
+        "lang": lang,
+        "t": t,
     })
 
 
@@ -223,12 +248,25 @@ async def save_settings(
 
     gen_str = ",".join(str(g) for g in sorted(selected))
 
+    # Save generations
     result = await session.execute(select(Setting).where(Setting.key == "generations"))
     setting = result.scalar_one_or_none()
     if setting:
         setting.value = gen_str
     else:
         session.add(Setting(key="generations", value=gen_str))
+
+    # Save language
+    new_lang = form.get("language", "de")
+    if new_lang not in ("de", "en"):
+        new_lang = "de"
+    result = await session.execute(select(Setting).where(Setting.key == "language"))
+    lang_setting = result.scalar_one_or_none()
+    if lang_setting:
+        lang_setting.value = new_lang
+    else:
+        session.add(Setting(key="language", value=new_lang))
+
     await session.commit()
 
     return RedirectResponse(url="/settings", status_code=303)
@@ -260,18 +298,22 @@ async def _reseed_in_background(generations: list[int]):
 
                 await seed_generation(session, gen, progress_callback=on_progress)
 
-            # Generate audio
-            logger.info("Generating audio for %d generations", len(generations))
-            _seed_status.update(phase="audio", current=0, total=0, detail="")
+            # Generate audio for both languages
             result = await session.execute(select(Pokemon).order_by(Pokemon.id))
             all_pokemon = result.scalars().all()
-            total = len(all_pokemon)
-            _seed_status["total"] = total
-            for i, poke in enumerate(all_pokemon):
-                _seed_status.update(current=i + 1, detail=poke.german_name)
-                force = poke.german_name in PRONUNCIATION
-                await generate_audio(poke.german_name, poke.id, force=force)
-                await generate_size_audio(poke.size_description_spoken, poke.id, force=True)
+            total = len(all_pokemon) * 2  # two languages
+            _seed_status.update(phase="audio", current=0, total=total, detail="")
+            logger.info("Generating audio for %d Pokemon in 2 languages", len(all_pokemon))
+            count = 0
+            for lang_code in ("de", "en"):
+                for poke in all_pokemon:
+                    count += 1
+                    name = poke.german_name if lang_code == "de" else poke.name.title()
+                    _seed_status.update(current=count, detail=f"[{lang_code.upper()}] {name}")
+                    force = (lang_code == "de" and poke.german_name in PRONUNCIATION)
+                    await generate_audio(name, poke.id, lang=lang_code, force=force)
+                    spoken = get_size_description_spoken(poke.height, lang_code)
+                    await generate_size_audio(spoken, poke.id, lang=lang_code, force=True)
 
         logger.info("Background seed completed successfully")
         _seed_status.update(running=False, done=True, error="")
@@ -294,7 +336,8 @@ async def reseed_data(
         return RedirectResponse(url="/settings", status_code=303)
 
     # Set status before creating the task so the response sees it immediately
-    _seed_status.update(running=True, done=False, error="", phase="start", current=0, total=0, detail="")
+    lang = await get_language(session)
+    _seed_status.update(running=True, done=False, error="", phase="start", current=0, total=0, detail="", lang=lang)
     asyncio.create_task(_reseed_in_background(generations))
 
     # If called via HTMX, return the polling banner directly
@@ -304,6 +347,8 @@ async def reseed_data(
 
 
 def _render_seed_status() -> str:
+    t = get_t(_seed_status.get("lang", "de"))
+
     if _seed_status["running"]:
         phase = _seed_status["phase"]
         current = _seed_status["current"]
@@ -312,13 +357,13 @@ def _render_seed_status() -> str:
 
         if phase == "start":
             pct = 0
-            label = "Starte…"
+            label = t["seed_start"]
         elif phase == "seed":
             pct = round(current / total * 100) if total > 0 else 0
-            label = f"Pokémon laden: {current}/{total} — {detail}"
+            label = f'{t["seed_pokemon"]}: {current}/{total} — {detail}'
         else:
             pct = round(current / total * 100) if total > 0 else 0
-            label = f"Audio generieren: {current}/{total} — {detail}"
+            label = f'{t["seed_audio"]}: {current}/{total} — {detail}'
 
         return (
             '<div id="seed-status" class="seed-banner running" '
@@ -326,8 +371,8 @@ def _render_seed_status() -> str:
             f'<div class="seed-label">{label}</div>'
             f'<div class="seed-progress-bar"><div class="seed-progress-fill" style="width:{pct}%"></div></div>'
             '</div>'
-            '<button id="seed-btn" class="settings-btn seed-btn" disabled hx-swap-oob="true">'
-            'Daten werden geladen…</button>'
+            f'<button id="seed-btn" class="settings-btn seed-btn" disabled hx-swap-oob="true">'
+            f'{t["settings_seed_loading"]}</button>'
         )
 
     if _seed_status["error"]:
@@ -335,18 +380,18 @@ def _render_seed_status() -> str:
         _seed_status["error"] = ""
         return (
             '<div id="seed-status" class="seed-banner error">'
-            f'Fehler beim Laden: {error}</div>'
-            '<button id="seed-btn" class="settings-btn seed-btn" hx-swap-oob="true">'
-            'Erneut versuchen</button>'
+            f'{t["seed_error"]}: {error}</div>'
+            f'<button id="seed-btn" class="settings-btn seed-btn" hx-swap-oob="true">'
+            f'{t["settings_seed_retry"]}</button>'
         )
 
     if _seed_status["done"]:
         _seed_status["done"] = False
         return (
             '<div id="seed-status" class="seed-banner done">'
-            '✅ Fertig! Alle Daten und Audiodateien wurden generiert.</div>'
-            '<button id="seed-btn" class="settings-btn seed-btn" hx-swap-oob="true">'
-            'Daten neu laden</button>'
+            f'✅ {t["seed_done"]}</div>'
+            f'<button id="seed-btn" class="settings-btn seed-btn" hx-swap-oob="true">'
+            f'{t["settings_seed_btn"]}</button>'
         )
 
     return '<div id="seed-status"></div>'

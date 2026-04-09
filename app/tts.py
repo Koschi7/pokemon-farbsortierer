@@ -1,8 +1,14 @@
+import asyncio
 import os
 import edge_tts
 
+from app.i18n import TTS_CONFIG
+
+MAX_RETRIES = 3
+RETRY_DELAY = 2.0
+BETWEEN_DELAY = 0.3
+
 AUDIO_DIR = os.path.join(os.path.dirname(__file__), "static", "audio")
-VOICE = "de-DE-ConradNeural"
 
 # Phonetic overrides so the German TTS doesn't fall into English pronunciation.
 # Keys = official German name, values = how the TTS should say it.
@@ -80,30 +86,52 @@ PRONUNCIATION = {
 }
 
 
-async def generate_audio(name: str, pokemon_id: int, force: bool = False) -> str:
-    """Generate an MP3 file for a Pokémon name. Returns the filename."""
-    os.makedirs(AUDIO_DIR, exist_ok=True)
+def _audio_dir_for(lang: str) -> str:
+    """Return audio directory for a language, e.g. static/audio/de/."""
+    d = os.path.join(AUDIO_DIR, lang)
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+async def _tts_with_retry(text: str, filepath: str, voice: str, rate: str, pitch: str):
+    """Generate TTS audio with retry logic for rate limiting."""
+    for attempt in range(MAX_RETRIES):
+        try:
+            communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
+            await communicate.save(filepath)
+            await asyncio.sleep(BETWEEN_DELAY)
+            return
+        except Exception:
+            if attempt < MAX_RETRIES - 1:
+                await asyncio.sleep(RETRY_DELAY * (attempt + 1))
+            else:
+                raise
+
+
+async def generate_audio(name: str, pokemon_id: int, lang: str = "de", force: bool = False) -> str:
+    """Generate an MP3 file for a Pokemon name. Returns the relative path."""
+    audio_dir = _audio_dir_for(lang)
     filename = f"{pokemon_id}.mp3"
-    filepath = os.path.join(AUDIO_DIR, filename)
+    filepath = os.path.join(audio_dir, filename)
 
     if os.path.exists(filepath) and not force:
-        return filename
+        return f"{lang}/{filename}"
 
-    spoken = PRONUNCIATION.get(name, name)
-    communicate = edge_tts.Communicate(spoken, VOICE, rate="-10%", pitch="+5Hz")
-    await communicate.save(filepath)
-    return filename
+    cfg = TTS_CONFIG.get(lang, TTS_CONFIG["de"])
+    spoken = PRONUNCIATION.get(name, name) if lang == "de" else name
+    await _tts_with_retry(spoken, filepath, cfg["voice"], cfg["rate"], cfg["pitch"])
+    return f"{lang}/{filename}"
 
 
-async def generate_size_audio(text: str, pokemon_id: int, force: bool = False) -> str:
-    """Generate an MP3 file for a Pokémon's size description."""
-    os.makedirs(AUDIO_DIR, exist_ok=True)
+async def generate_size_audio(text: str, pokemon_id: int, lang: str = "de", force: bool = False) -> str:
+    """Generate an MP3 file for a Pokemon's size description."""
+    audio_dir = _audio_dir_for(lang)
     filename = f"size_{pokemon_id}.mp3"
-    filepath = os.path.join(AUDIO_DIR, filename)
+    filepath = os.path.join(audio_dir, filename)
 
     if os.path.exists(filepath) and not force:
-        return filename
+        return f"{lang}/{filename}"
 
-    communicate = edge_tts.Communicate(text, VOICE, rate="-10%", pitch="+5Hz")
-    await communicate.save(filepath)
-    return filename
+    cfg = TTS_CONFIG.get(lang, TTS_CONFIG["de"])
+    await _tts_with_retry(text, filepath, cfg["voice"], cfg["rate"], cfg["pitch"])
+    return f"{lang}/{filename}"

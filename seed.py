@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed script: fetches Pokémon data from PokéAPI and stores it in SQLite."""
+"""Seed script: fetches Pokemon data from PokeAPI and stores it in SQLite."""
 
 import asyncio
 import sys
@@ -12,6 +12,7 @@ from app.config import DATABASE_URL, get_default_generations
 from app.models import Base, Pokemon, PokemonType, Setting
 from app.pokeapi import seed_generation
 from app.tts import generate_audio, generate_size_audio, PRONUNCIATION
+from app.i18n import get_size_description_spoken
 
 
 async def main():
@@ -21,7 +22,7 @@ async def main():
         if idx + 1 < len(sys.argv):
             generations = [int(g) for g in sys.argv[idx + 1].split(",")]
 
-    print(f"Seeding Generationen: {generations}")
+    print(f"Seeding generations: {generations}")
 
     engine = create_async_engine(DATABASE_URL, echo=False)
 
@@ -50,7 +51,7 @@ async def main():
                 print(f"  [{current}/{total}] {name}")
 
             await seed_generation(session, gen, progress_callback=progress)
-            print(f"Generation {gen} fertig!")
+            print(f"Generation {gen} done!")
 
         # Save generations setting
         result = await session.execute(select(Setting).where(Setting.key == "generations"))
@@ -62,21 +63,25 @@ async def main():
             session.add(Setting(key="generations", value=gen_str))
         await session.commit()
 
-    # Generate TTS audio files
-    print("\n--- Sprachausgabe generieren ---")
+    # Generate TTS audio files for both languages
     async with async_session() as session:
         result = await session.execute(select(Pokemon).order_by(Pokemon.id))
         all_pokemon = result.scalars().all()
         total = len(all_pokemon)
-        for i, poke in enumerate(all_pokemon):
-            force = poke.german_name in PRONUNCIATION
-            await generate_audio(poke.german_name, poke.id, force=force)
-            await generate_size_audio(poke.size_description_spoken, poke.id, force=True)
-            hint = f" (-> {PRONUNCIATION[poke.german_name]})" if force else ""
-            print(f"  [{i+1}/{total}] Audio: {poke.german_name}{hint}")
+
+        for lang_code in ("de", "en"):
+            print(f"\n--- Audio [{lang_code.upper()}] ---")
+            for i, poke in enumerate(all_pokemon):
+                name = poke.german_name if lang_code == "de" else poke.name.title()
+                force = (lang_code == "de" and poke.german_name in PRONUNCIATION)
+                await generate_audio(name, poke.id, lang=lang_code, force=force)
+                spoken = get_size_description_spoken(poke.height, lang_code)
+                await generate_size_audio(spoken, poke.id, lang=lang_code, force=True)
+                hint = f" (-> {PRONUNCIATION[poke.german_name]})" if force else ""
+                print(f"  [{i+1}/{total}] Audio: {name}{hint}")
 
     await engine.dispose()
-    print("\nFertig! Datenbank und Audiodateien wurden erfolgreich erstellt.")
+    print("\nDone! Database and audio files have been created successfully.")
 
 
 if __name__ == "__main__":
