@@ -397,6 +397,11 @@ body {
     color: #155724;
 }
 
+.seed-banner.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
 .seed-label {
     margin-bottom: 8px;
 }
