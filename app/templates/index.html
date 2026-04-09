@@ -8,6 +8,7 @@
         <div class="mode-toggle">
             <button class="mode-btn" data-mode="color" onclick="switchMode('color')">Farbe</button>
             <button class="mode-btn active" data-mode="type" onclick="switchMode('type')">Typ</button>
+            <button class="mode-btn" data-mode="search" onclick="switchMode('search')">Suche</button>
         </div>
     </header>
 
@@ -38,6 +39,22 @@
             {{ type_icon(key, "32") }}
         </button>
         {% endfor %}
+    </div>
+
+    <div class="search-bar hidden" id="search-bar">
+        <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="Pokemon suchen…"
+            autocomplete="off"
+            hx-get="/pokemon?filter=search"
+            hx-target="#pokemon-grid"
+            hx-swap="innerHTML"
+            hx-trigger="keyup changed delay:300ms"
+            hx-include="this"
+            name="q"
+        >
     </div>
 </nav>
 </div>

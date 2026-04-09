@@ -5,12 +5,19 @@ function switchMode(mode) {
     });
     document.getElementById('color-filters').classList.toggle('hidden', mode !== 'color');
     document.getElementById('type-filters').classList.toggle('hidden', mode !== 'type');
+    document.getElementById('search-bar').classList.toggle('hidden', mode !== 'search');
 
     // Clear active filter highlight
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
 
-    // Reset grid
-    document.getElementById('pokemon-grid').innerHTML = '<p class="hint">Wähle eine Farbe oder einen Typ!</p>';
+    // Reset grid and focus search input
+    if (mode === 'search') {
+        document.getElementById('pokemon-grid').innerHTML = '<p class="hint">Tippe einen Namen ein!</p>';
+        setTimeout(() => document.getElementById('search-input').focus(), 100);
+    } else {
+        document.getElementById('search-input').value = '';
+        document.getElementById('pokemon-grid').innerHTML = '<p class="hint">Wähle eine Farbe oder einen Typ!</p>';
+    }
 }
 
 // --- Active filter highlight ---

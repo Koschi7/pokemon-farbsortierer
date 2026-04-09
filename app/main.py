@@ -69,6 +69,7 @@ async def pokemon_grid(
     request: Request,
     filter: str = "color",
     value: str = "",
+    q: str = "",
     session: AsyncSession = Depends(get_session),
 ):
     generations = await get_active_generations(session)
@@ -78,7 +79,12 @@ async def pokemon_grid(
         .where(Pokemon.generation.in_(generations))
     )
 
-    if filter == "color" and value:
+    if filter == "search":
+        if not q.strip():
+            return HTMLResponse('<p class="hint">Tippe einen Namen ein!</p>')
+        search_term = f"%{q.strip()}%"
+        query = query.where(Pokemon.german_name.ilike(search_term))
+    elif filter == "color" and value:
         query = query.where(Pokemon.color == value)
     elif filter == "type" and value:
         query = query.where(
