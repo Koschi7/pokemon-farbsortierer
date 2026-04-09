@@ -6,6 +6,33 @@
 
 ## Deutsch
 
+### 2026-04-09
+
+**Zweisprachigkeit (Deutsch + Englisch)**
+- Sprache umschaltbar in den Einstellungen
+- Alle UI-Texte, Pokemon-Namen, Typ-Labels und Grossenvergleiche in beiden Sprachen
+- Sprachausgabe (TTS) wird fur beide Sprachen generiert
+- Suche funktioniert in der aktiven Sprache
+
+**Favoriten**
+- Herz-Button auf der Detailkarte zum Markieren von Lieblings-Pokemon
+- Neuer Favoriten-Tab im Header zeigt alle markierten Pokemon
+
+**Suchfunktion**
+- Neuer "Suche"-Modus im Header
+- Pokemon nach Namen filtern mit Echtzeit-Ergebnissen (300ms Debounce)
+
+**Offline & PWA**
+- Service Worker cached CSS, JS, Icons, Audio und Pokemon-Bilder
+- Web App Manifest fur Installation als App (Android/iOS)
+
+**Verbesserungen**
+- Seed-Button wird deaktiviert wahrend Daten geladen werden (kein Doppelklick)
+- Fehlerbehandlung und Logging im Hintergrund-Task
+- Datenbank-Indexes fur schnellere Filter-Abfragen
+- Kompakteres Tablet-Layout fur Fire Tablet 8
+- TTS Retry-Logik bei Rate-Limiting
+
 ### 2026-04-03
 
 **Bugfixes & Verbesserungen**
@@ -62,6 +89,33 @@
 ---
 
 ## English
+
+### 2026-04-09
+
+**Bilingual support (German + English)**
+- Language switchable in settings
+- All UI text, Pokemon names, type labels, and size comparisons in both languages
+- Text-to-speech (TTS) generated for both languages
+- Search works in the active language
+
+**Favorites**
+- Heart button on detail card to mark favorite Pokemon
+- New favorites tab in header shows all marked Pokemon
+
+**Search**
+- New "Search" mode in header
+- Filter Pokemon by name with real-time results (300ms debounce)
+
+**Offline & PWA**
+- Service Worker caches CSS, JS, icons, audio, and Pokemon images
+- Web App Manifest for installation as app (Android/iOS)
+
+**Improvements**
+- Seed button disabled while data is loading (prevents double-click)
+- Error handling and logging in background task
+- Database indexes for faster filter queries
+- Compact tablet layout optimized for Fire Tablet 8
+- TTS retry logic for rate limiting
 
 ### 2026-04-03
 
