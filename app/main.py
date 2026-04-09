@@ -231,6 +231,12 @@ async def reseed_data(
 ):
     generations = await get_active_generations(session)
 
+    # Prevent double-start
+    if _seed_status["running"]:
+        if request.headers.get("HX-Request"):
+            return HTMLResponse(_render_seed_status())
+        return RedirectResponse(url="/settings", status_code=303)
+
     # Set status before creating the task so the response sees it immediately
     _seed_status.update(running=True, done=False, phase="start", current=0, total=0, detail="")
     asyncio.create_task(_reseed_in_background(generations))
@@ -264,6 +270,8 @@ def _render_seed_status() -> str:
             f'<div class="seed-label">{label}</div>'
             f'<div class="seed-progress-bar"><div class="seed-progress-fill" style="width:{pct}%"></div></div>'
             '</div>'
+            '<button id="seed-btn" class="settings-btn seed-btn" disabled hx-swap-oob="true">'
+            'Daten werden geladen…</button>'
         )
 
     if _seed_status["done"]:
@@ -271,6 +279,8 @@ def _render_seed_status() -> str:
         return (
             '<div id="seed-status" class="seed-banner done">'
             '✅ Fertig! Alle Daten und Audiodateien wurden generiert.</div>'
+            '<button id="seed-btn" class="settings-btn seed-btn" hx-swap-oob="true">'
+            'Daten neu laden</button>'
         )
 
     return '<div id="seed-status"></div>'

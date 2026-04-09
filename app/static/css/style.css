@@ -483,6 +483,12 @@ body {
     color: #333;
 }
 
+.seed-btn:disabled {
+    background: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
 .back-btn {
     background: #e9ecef;
     color: #333;
