@@ -8,12 +8,12 @@
         <div class="mode-toggle">
             <button class="mode-btn" data-mode="color" onclick="switchMode('color')">{{ t.mode_color }}</button>
             <button class="mode-btn active" data-mode="type" onclick="switchMode('type')">{{ t.mode_type }}</button>
-            <button class="mode-btn" data-mode="search" onclick="switchMode('search')">{{ t.mode_search }}</button>
-            <button class="mode-btn" data-mode="favorites"
+            <button class="mode-btn mode-icon" data-mode="search" onclick="switchMode('search')"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button class="mode-btn mode-icon" data-mode="favorites"
                     hx-get="/pokemon?filter=favorites"
                     hx-target="#pokemon-grid"
                     hx-swap="innerHTML"
-                    onclick="switchMode('favorites')">❤️</button>
+                    onclick="switchMode('favorites')"><i class="fa-solid fa-heart"></i></button>
         </div>
     </header>
 

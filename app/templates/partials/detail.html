@@ -15,7 +15,7 @@
     <button class="fav-btn {{ 'fav-active' if is_favorite else '' }}"
             hx-post="/pokemon/{{ pokemon.id }}/favorite"
             hx-swap="outerHTML">
-        {{ "❤️" if is_favorite else "🤍" }}
+        <i class="fa-{{ 'solid' if is_favorite else 'regular' }} fa-heart"></i>
     </button>
 
     <div class="detail-types">

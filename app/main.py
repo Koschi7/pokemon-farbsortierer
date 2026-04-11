@@ -210,11 +210,11 @@ async def toggle_favorite(
         is_favorite = True
     await session.commit()
 
-    heart = "❤️" if is_favorite else "🤍"
+    icon = "fa-solid" if is_favorite else "fa-regular"
     return HTMLResponse(
         f'<button class="fav-btn {"fav-active" if is_favorite else ""}" '
         f'hx-post="/pokemon/{pokemon_id}/favorite" hx-swap="outerHTML">'
-        f'{heart}</button>'
+        f'<i class="{icon} fa-heart"></i></button>'
     )
 
 

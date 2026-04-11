@@ -63,6 +63,11 @@ body {
     border-color: #fff;
 }
 
+.mode-btn.mode-icon {
+    padding: 6px 10px;
+    font-size: 1rem;
+}
+
 /* Filter Navigation */
 .filter-nav {
     background: #fff;
@@ -343,6 +348,11 @@ body {
     transition: transform 0.15s;
     min-width: 48px;
     min-height: 48px;
+    color: #ccc;
+}
+
+.fav-btn.fav-active {
+    color: #ff6b6b;
 }
 
 .fav-btn:active {

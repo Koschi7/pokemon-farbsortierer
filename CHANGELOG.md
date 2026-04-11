@@ -6,6 +6,12 @@
 
 ## Deutsch
 
+### 2026-04-11
+
+**Font Awesome Icons**
+- Suche und Favoriten im Header als Icons (Lupe, Herz) statt Text — spart Platz auf kleinen Bildschirmen
+- Favoriten-Herz auf Detailkarte nutzt Font Awesome statt Emoji fur konsistente Darstellung
+
 ### 2026-04-09
 
 **Zweisprachigkeit (Deutsch + Englisch)**
@@ -89,6 +95,12 @@
 ---
 
 ## English
+
+### 2026-04-11
+
+**Font Awesome Icons**
+- Search and favorites in header as icons (magnifying glass, heart) instead of text — saves space on small screens
+- Favorite heart on detail card uses Font Awesome instead of emoji for consistent rendering
 
 ### 2026-04-09
 
