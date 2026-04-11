@@ -348,11 +348,11 @@ body {
     transition: transform 0.15s;
     min-width: 48px;
     min-height: 48px;
-    color: #ccc;
+    color: #ccc !important;
 }
 
 .fav-btn.fav-active {
-    color: #ff6b6b;
+    color: #ff6b6b !important;
 }
 
 .fav-btn:active {
